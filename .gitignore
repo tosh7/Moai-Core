@@ -25,6 +25,7 @@
 *.la
 *.a
 *.lib
+*.xcframework
 
 # Executables
 *.exe
