@@ -1,7 +1,12 @@
-rm -rf build
-mkdir build
-mkdir temporary
-clang++ -o temporary/main.o -c source/main.cpp
-clang++ -o temporary/calculator.o -c source/calculator.cpp
-ar rcs build/libmoai.a temporary/main.o temporary/calculator.o
-rm -rf temporary
+sh build.sh
+
+mkdir -p moai-arm64
+cp libmoai-arm64.a moai-arm64/
+
+mkdir -p moai-x86_64
+cp libmoai-x86_64.a moai-x86_64/
+
+xcodebuild -create-xcframework \
+    -library moai-arm64/libmoai-arm64.a \
+    -library moai-x86_6/libmoai-x86_64.a \
+    -output moai.xcframework \
