@@ -5,8 +5,8 @@
 
 class Elevator {
     public:
-        Elevator(max: int, minFloor: int);
-        void request(floor: int, direction: Direction);
+        Elevator(int max, int min);
+        void request(int floor, Direction direction);
     private:
         int max_floor;
         int min_floor;
