@@ -1,7 +1,7 @@
-#include "directions.h"
-
 #ifndef Elevator_H
 #define Elevator_H
+
+#include "directions.h"
 
 class Elevator {
     public:
