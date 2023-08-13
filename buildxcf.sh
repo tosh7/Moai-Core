@@ -1,3 +1,6 @@
+# doesn't work
+# to make this work, it will need pbproj file
+
 sh build.sh
 
 mkdir -p moai-arm64
