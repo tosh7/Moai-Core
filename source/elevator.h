@@ -14,6 +14,6 @@ class Elevator {
         int min_floor;
         std::vector<int> requested_floors;
         Direction m_direction;
-};
+};                  
 
 #endif
