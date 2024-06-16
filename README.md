@@ -11,14 +11,6 @@ To make .a file, do below.
 
 You will get .a file output under build directory.
 
-## How to create XCFramework
-1. Clone this repository
-2. Run `sh buildxcf.sh`
-
-You will get .xcframework file output under build directory.
-Now only suopports arm64-ios type binary.
-arm64 and x86_64 simulator support will be provided soon...
-
 ## Licens
 [MIT License](https://github.com/tosh7/Moai-Core/blob/main/LICENSE)
 
