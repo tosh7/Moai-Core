@@ -9,6 +9,7 @@ class Elevator {
         int current_floor;
         Elevator(int max, int min);
         void request(int floor, Direction direction);
+        void step();
     private:
         int max_floor;
         int min_floor;

@@ -12,3 +12,6 @@ void Elevator::request(int floor, Direction direction) {
     // if m_direction = NONE
 };
 
+void Elevator::step() {
+};
+
