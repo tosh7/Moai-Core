@@ -34,3 +34,6 @@
 
 # Others
 .DS_Store
+
+# Swift Package Manager
+.build/
