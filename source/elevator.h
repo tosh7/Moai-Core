@@ -3,6 +3,7 @@
 
 #include "directions.h"
 #include <vector>
+#include <optional>
 
 class Elevator {
     public:
@@ -14,7 +15,7 @@ class Elevator {
         int max_floor;
         int min_floor;
         std::vector<int> requested_floors;
-        Direction m_direction;
+        std::optional<Direction> m_direction;
 };                  
 
 #endif

@@ -3,8 +3,7 @@
 
 enum class Direction {
     UP,
-    DOWN,
-    NONE
+    DOWN
 };
 
 #endif
