@@ -16,12 +16,12 @@ class Elevator {
     public:
         int current_floor;
         Elevator(int max, int min);
-        void request(int floor, Direction direction);
+        void request(const Request& call);
         void step();
     private:
         int max_floor;
         int min_floor;
-        std::vector<Request> requested_floors;
+        std::vector<Request> requests;
         std::optional<Direction> m_direction;
 };                  
 

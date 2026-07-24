@@ -8,16 +8,16 @@ Elevator::Elevator(int max, int min) {
     current_floor = 1;
 };
 
-void Elevator::request(int floor, Direction direction) {
-    if(floor > max_floor || floor < min_floor) { 
+void Elevator::request(const Request& call) {
+    if(call.floor > max_floor || call.floor < min_floor) {
         return;
     }
 
-    for(const Request& r : requested_floors) {
-        if(r == Request{floor, direction}) return; 
+    for(const Request& r : requests) {
+        if(r == call) return;
     }
 
-    requested_floors.push_back({floor, direction});
+    requests.push_back(call);
 };
 
 void Elevator::step() {

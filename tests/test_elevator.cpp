@@ -25,7 +25,7 @@ void test_initial_state() {
 // 2. After a request, each step moves one floor toward the destination
 void test_moves_one_floor_per_step() {
     Elevator elevator(10, 1);
-    elevator.request(5, Direction::UP);
+    elevator.request({5, Direction::UP});
     for (int expected = 2; expected <= 5; ++expected) {
         elevator.step();
         CHECK_EQ("moving up to floor " + std::to_string(expected), elevator.current_floor, expected);
@@ -35,7 +35,7 @@ void test_moves_one_floor_per_step() {
 // 3. Once arrived, the request clears and it moves no further
 void test_stops_at_destination() {
     Elevator elevator(10, 1);
-    elevator.request(3, Direction::UP);
+    elevator.request({3, Direction::UP});
     for (int i = 0; i < 5; ++i) {
         elevator.step();
     }
