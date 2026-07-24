@@ -5,6 +5,13 @@
 #include <vector>
 #include <optional>
 
+struct Request {
+    int floor;
+    Direction direction;
+
+    bool operator==(const Request&) const = default;
+};
+
 class Elevator {
     public:
         int current_floor;
@@ -14,7 +21,7 @@ class Elevator {
     private:
         int max_floor;
         int min_floor;
-        std::vector<int> requested_floors;
+        std::vector<Request> requested_floors;
         std::optional<Direction> m_direction;
 };                  
 
