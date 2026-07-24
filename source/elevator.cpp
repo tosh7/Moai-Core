@@ -21,5 +21,24 @@ void Elevator::request(const Request& call) {
 };
 
 void Elevator::step() {
+    if(requests.empty()) {
+        m_direction = std::nullopt;
+        return;
+    }
+
+    // Serve requests in the order they arrived: the head is the current target.
+    const int target = requests.front().floor;
+
+    if(current_floor < target) {
+        m_direction = Direction::UP;
+        current_floor++;
+    } else if(current_floor > target) {
+        m_direction = Direction::DOWN;
+        current_floor--;
+    }
+
+    if(current_floor == target) {
+        requests.erase(requests.begin());
+    }
 };
 
