@@ -2,7 +2,7 @@
 Core algorithms for Moai framework.
 
 ## Environments
-Version: C++17
+Version: C++23
 
 ## How to build
 To make .a file, do below.

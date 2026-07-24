@@ -23,5 +23,6 @@ let package = Package(
             path: "source",
             exclude: ["main.cpp"]
         ),
-    ]
+    ],
+    cxxLanguageStandard: .cxx2b
 )
