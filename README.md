@@ -1,6 +1,8 @@
 # Moai-Core
 Core algorithms for Moai framework.
 
+[日本語](README.ja.md)
+
 ## Environments
 Version: C++23
 
