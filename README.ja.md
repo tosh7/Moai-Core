@@ -1,6 +1,8 @@
 # Moai-Core
 Moai フレームワークのコアアルゴリズム。
 
+[![Test](https://github.com/tosh7/Moai-Core/actions/workflows/test.yml/badge.svg)](https://github.com/tosh7/Moai-Core/actions/workflows/test.yml)
+
 [English](README.md)
 
 ## 動作環境

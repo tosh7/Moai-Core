@@ -1,6 +1,8 @@
 # Moai-Core
 Core algorithms for Moai framework.
 
+[![Test](https://github.com/tosh7/Moai-Core/actions/workflows/test.yml/badge.svg)](https://github.com/tosh7/Moai-Core/actions/workflows/test.yml)
+
 [日本語](README.ja.md)
 
 ## Environments
