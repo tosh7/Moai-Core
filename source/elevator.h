@@ -21,7 +21,8 @@ class Elevator {
     private:
         int max_floor;
         int min_floor;
-        std::vector<Request> requests;
+        std::vector<bool> up_calls;
+        std::vector<bool> down_calls;
         std::optional<Direction> m_direction;
 };                  
 
