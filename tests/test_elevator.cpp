@@ -1,4 +1,4 @@
-#include "../source/elevator.h"
+#include "../source/include/elevator.h"
 #include <iostream>
 
 static int checks = 0;
