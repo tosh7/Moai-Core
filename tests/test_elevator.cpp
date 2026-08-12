@@ -1,20 +1,5 @@
 #include "../source/include/elevator.h"
-#include <iostream>
-
-static int checks = 0;
-static int failures = 0;
-
-#define CHECK_EQ(label, actual, expected)                                     \
-    do {                                                                      \
-        ++checks;                                                             \
-        auto a = (actual);                                                    \
-        auto e = (expected);                                                  \
-        if (a != e) {                                                         \
-            ++failures;                                                       \
-            std::cout << "FAIL: " << label << " - expected " << e             \
-                      << ", got " << a << std::endl;                          \
-        }                                                                     \
-    } while (0)
+#include "check.h"
 
 // 1. Starts on floor 1 right after construction
 void test_initial_state() {
@@ -72,14 +57,10 @@ void test_reverses_when_nothing_is_ahead() {
     CHECK_EQ("ends at 9 after reversing", elevator.current_floor, 9);
 }
 
-int main() {
+void run_elevator_tests() {
     test_initial_state();
     test_moves_one_floor_per_step();
     test_stops_at_destination();
     test_serves_calls_in_travel_order();
     test_reverses_when_nothing_is_ahead();
-
-    std::cout << checks - failures << "/" << checks << " checks passed"
-              << std::endl;
-    return failures == 0 ? 0 : 1;
 }
