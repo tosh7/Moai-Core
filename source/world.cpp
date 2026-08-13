@@ -1,7 +1,7 @@
 // The 2D physics core the emoji pit runs on.
 //
-// Not built yet: add this file and tests/test_world.cpp to test.sh, and
-// uncomment run_world_tests() in tests/main.cpp, once step() can satisfy them.
+// Bodies fall and land. They do not yet notice each other or the side walls,
+// so the collision half of tests/test_world.cpp stays commented out.
 
 #include "world.h"
 
@@ -25,6 +25,25 @@ void World::set_velocity(int index, Vec2 v) {
 }
 
 void World::apply_radial_impulse(Vec2 center, float radius, float strength) {}
+
+// Semi-implicit Euler: the new velocity is what moves the body, not the old
+// one. Integrating the other way round leaves a stack of bodies shivering
+// instead of coming to rest.
+void World::step(float dt) {
+    for (Body& body : bodies) {
+        body.velocity.x += gravity.x * dt;
+        body.velocity.y += gravity.y * dt;
+
+        body.position.x += body.velocity.x * dt;
+        body.position.y += body.velocity.y * dt;
+
+        // The floor holds the body up and takes its downward speed away.
+        if (body.position.y < body.radius) {
+            body.position.y = body.radius;
+            body.velocity.y = 0;
+        }
+    }
+}
 
 int World::body_count() const {
     return static_cast<int>(bodies.size());
