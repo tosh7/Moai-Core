@@ -10,3 +10,30 @@ World::World(float w, float h) {
     height = h;
     gravity = {0, 0};
 }
+
+int World::add_body(Vec2 position, float radius) {
+    bodies.push_back({position, {0, 0}, radius});
+    return static_cast<int>(bodies.size()) - 1;
+}
+
+void World::set_gravity(Vec2 g) {
+    gravity = g;
+}
+
+void World::set_velocity(int index, Vec2 v) {
+    bodies[index].velocity = v;
+}
+
+void World::apply_radial_impulse(Vec2 center, float radius, float strength) {}
+
+int World::body_count() const {
+    return static_cast<int>(bodies.size());
+}
+
+Vec2 World::position_of(int index) const {
+    return bodies[index].position;
+}
+
+Vec2 World::velocity_of(int index) const {
+    return bodies[index].velocity;
+}
