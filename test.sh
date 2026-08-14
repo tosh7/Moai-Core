@@ -7,11 +7,8 @@ if command -v xcrun >/dev/null 2>&1; then
 fi
 
 $CXX -std=c++23 -Werror=switch -Isource/include \
-    source/elevator.cpp \
-    source/world.cpp \
-    tests/test_elevator.cpp \
-    tests/test_world.cpp \
-    tests/main.cpp \
+    source/*.cpp \
+    tests/*.cpp \
     -o build/test_runner
 
 ./build/test_runner
