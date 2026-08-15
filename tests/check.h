@@ -44,4 +44,13 @@ inline int failures = 0;
         }                                                                     \
     } while (0)
 
+#define CHECK_FALSE(label, actual)                                            \
+    do {                                                                      \
+        ++checks;                                                             \
+        if (actual) {                                                         \
+            ++failures;                                                       \
+            std::cout << "FAIL: " << label << std::endl;                      \
+        }                                                                     \
+    } while (0)
+
 #endif
