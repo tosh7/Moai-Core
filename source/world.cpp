@@ -1,9 +1,9 @@
 // The 2D physics core the emoji pit runs on.
-//
-// Bodies fall and land. They do not yet notice each other or the side walls,
-// so the collision half of tests/test_world.cpp stays commented out.
 
 #include "world.h"
+
+#include <cmath>
+#include <iterator>
 
 World::World(float w, float h) {
     width = w;
@@ -24,7 +24,24 @@ void World::set_velocity(int index, Vec2 v) {
     bodies[index].velocity = v;
 }
 
-void World::apply_radial_impulse(Vec2 center, float radius, float strength) {}
+// A tap. Everything within reach is shoved directly away from the point,
+// harder the closer it is, so the middle of a pile scatters and the edges
+// only shift.
+void World::apply_radial_impulse(Vec2 center, float radius, float strength) {
+    for (Body& body : bodies) {
+        float dx = body.position.x - center.x;
+        float dy = body.position.y - center.y;
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        if (distance > radius || distance == 0) {
+            continue;
+        }
+
+        float falloff = (radius - distance) / radius;
+        body.velocity.x += dx / distance * strength * falloff;
+        body.velocity.y += dy / distance * strength * falloff;
+    }
+}
 
 // Semi-implicit Euler: the new velocity is what moves the body, not the old
 // one. Integrating the other way round leaves a stack of bodies shivering
@@ -36,11 +53,84 @@ void World::step(float dt) {
 
         body.position.x += body.velocity.x * dt;
         body.position.y += body.velocity.y * dt;
+    }
 
-        // The floor holds the body up and takes its downward speed away.
-        if (body.position.y < body.radius) {
-            body.position.y = body.radius;
-            body.velocity.y = 0;
+    // Resolving once is enough for two bodies meeting in open space, but not
+    // for a pile. A column dropped together falls at one speed, so no pair is
+    // closing on any other and no contact has anything to correct; only the
+    // floor knows better, and its grip reaches the top a fraction at a time.
+    // Ninety bodies at this many passes cost a fiftieth of a frame, so the
+    // count is set by how still the pile has to look, not by the budget.
+    constexpr int passes = 32;
+    for (int pass = 0; pass < passes; ++pass) {
+        // Every pair once. The inner loop starts after the outer one so a pair
+        // is never pushed apart twice, and so a body never meets itself.
+        for (auto a = bodies.begin(); a != bodies.end(); ++a) {
+            for (auto b = std::next(a); b != bodies.end(); ++b) {
+                float dx = b->position.x - a->position.x;
+                float dy = b->position.y - a->position.y;
+                float distance = std::sqrt(dx * dx + dy * dy);
+                float overlap = a->radius + b->radius - distance;
+
+                if (overlap <= 0 || distance == 0) {
+                    continue;
+                }
+
+                // Unit vector pointing from a to b.
+                float nx = dx / distance;
+                float ny = dy / distance;
+
+                // Share the overlap out, half each, so neither is favoured.
+                // Only most of it, though: separating a resting pair cleanly
+                // would hide them from the next pass, and the pass after that
+                // is where their speeds finish cancelling out.
+                constexpr float recovery = 0.8f;
+                float push = overlap * recovery * 0.5f;
+                a->position.x -= nx * push;
+                a->position.y -= ny * push;
+                b->position.x += nx * push;
+                b->position.y += ny * push;
+
+                float closing = (b->velocity.x - a->velocity.x) * nx
+                              + (b->velocity.y - a->velocity.y) * ny;
+
+                // Already drawing apart. Reflecting now would pull them back
+                // together and leave a resting pair humming.
+                if (closing > 0) {
+                    continue;
+                }
+
+                // A body that has merely sagged onto its neighbour under
+                // gravity should not bounce off it; only a real impact does.
+                constexpr float bounce_threshold = 60.0f;
+                float restitution = -closing > bounce_threshold ? 0.5f : 0.0f;
+                float impulse = -(1 + restitution) * closing * 0.5f;
+
+                a->velocity.x -= impulse * nx;
+                a->velocity.y -= impulse * ny;
+                b->velocity.x += impulse * nx;
+                b->velocity.y += impulse * ny;
+            }
+        }
+
+        // The walls have the last word, so a body pushed out of the world by
+        // its neighbours is put back before anything reads its position.
+        for (Body& body : bodies) {
+            if (body.position.x < body.radius) {
+                body.position.x = body.radius;
+                body.velocity.x = 0;
+            } else if (body.position.x > width - body.radius) {
+                body.position.x = width - body.radius;
+                body.velocity.x = 0;
+            }
+
+            if (body.position.y < body.radius) {
+                body.position.y = body.radius;
+                body.velocity.y = 0;
+            } else if (body.position.y > height - body.radius) {
+                body.position.y = height - body.radius;
+                body.velocity.y = 0;
+            }
         }
     }
 }
