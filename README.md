@@ -41,6 +41,41 @@ around: with nothing further ahead, the opposite call boards there too.
 Not yet supported: car calls (buttons inside the car), door state, basement
 floors, and dispatching more than one car.
 
+## World
+
+A pit of circular bodies that fall, collide and pile up.
+
+Like the elevator, it has no clock. `step(dt)` advances the simulation by one
+fixed slice, and the host decides how often that happens, so the same run can
+be watched at a comfortable pace on screen or replayed in an instant in a test.
+A fixed slice also makes the result repeatable: the same bodies dropped from
+the same places land the same way every time.
+
+```cpp
+#include "world.h"
+
+World world(400, 800);                       // a pit 400 by 800, floor at y = 0
+world.set_gravity({0, -1000});               // y points up, so down is negative
+
+int body = world.add_body({200, 700}, 20);   // a circle of radius 20
+
+world.step(1.0f / 60);                       // one slice of simulated time
+world.position_of(body);                     // where to draw it now
+```
+
+`add_body` returns an index rather than a pointer, so a handle stays valid as
+the pit fills up. Bodies are circles: there is no other shape, and no rotation.
+
+`step` integrates gravity, pushes overlapping bodies apart, reflects the speed
+at which they met, and keeps everything inside the walls. A pair that has
+merely sagged together under gravity does not bounce; only a real impact does.
+
+`apply_radial_impulse` shoves everything within reach of a point directly away
+from it, harder the closer it is — a tap that scatters a pile.
+
+Not yet supported: shapes other than circles, rotation, per-body mass or
+material, and joints.
+
 ## How to build
 To make .a file, do below.
 1. Clone this repository
