@@ -25,6 +25,10 @@ class World {
         Vec2 position_of(int index) const;
         Vec2 velocity_of(int index) const;
 
+        int add_obstacle(Vec2 center, Vec2 half_size, float angle);
+        void move_obstacle(int index, Vec2 center, float angle);
+        int obstacle_count() const;
+
     private:
         struct Body {
             Vec2 position;
@@ -32,10 +36,21 @@ class World {
             float radius;
         };
 
+        struct Obstacle {
+            Vec2 center;
+            Vec2 half_size;
+            float angle;
+            // Where it was when the last step began. The difference is how fast it
+            // is moving, which is what lets a turning blade fling rather than nudge
+            Vec2 previous_center;
+            float previous_angle;
+        };
+
         float width;
         float height;
         Vec2 gravity;
         std::vector<Body> bodies;
+        std::vector<Obstacle> obstacles;
 };
 
 #endif
