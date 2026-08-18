@@ -2,6 +2,7 @@
 
 #include "world.h"
 
+#include <algorithm>
 #include <cmath>
 #include <iterator>
 
@@ -113,6 +114,74 @@ void World::step(float dt) {
             }
         }
 
+        // Obstacles are immovable, so unlike a pair of bodies the correction
+        // falls entirely on the body: it takes the whole overlap, and the whole
+        // of the impulse.
+        for (Body& body : bodies) {
+            for (const Obstacle& obstacle : obstacles) {
+                // Work in the obstacle's own frame, where it is axis aligned
+                // and the nearest point on it is a matter of clamping.
+                float c = std::cos(obstacle.angle);
+                float s = std::sin(obstacle.angle);
+                float dx = body.position.x - obstacle.center.x;
+                float dy = body.position.y - obstacle.center.y;
+                float local_x =  dx * c + dy * s;
+                float local_y = -dx * s + dy * c;
+
+                float closest_x = std::clamp(local_x, -obstacle.half_size.x,
+                                             obstacle.half_size.x);
+                float closest_y = std::clamp(local_y, -obstacle.half_size.y,
+                                             obstacle.half_size.y);
+
+                float offset_x = local_x - closest_x;
+                float offset_y = local_y - closest_y;
+                float distance = std::sqrt(offset_x * offset_x + offset_y * offset_y);
+
+                float normal_x = 0;
+                float normal_y = 0;
+                float overlap = 0;
+
+                if (distance > 0) {
+                    if (distance >= body.radius) {
+                        continue;
+                    }
+                    normal_x = offset_x / distance;
+                    normal_y = offset_y / distance;
+                    overlap = body.radius - distance;
+                } else {
+                    // Dead centre inside the rectangle, which a fast body can
+                    // reach in a single step. Leave by the nearest face.
+                    float out_x = obstacle.half_size.x - std::abs(local_x);
+                    float out_y = obstacle.half_size.y - std::abs(local_y);
+
+                    if (out_x < out_y) {
+                        normal_x = local_x < 0 ? -1.0f : 1.0f;
+                        overlap = out_x + body.radius;
+                    } else {
+                        normal_y = local_y < 0 ? -1.0f : 1.0f;
+                        overlap = out_y + body.radius;
+                    }
+                }
+
+                // Back into the world's frame.
+                float world_nx = normal_x * c - normal_y * s;
+                float world_ny = normal_x * s + normal_y * c;
+
+                body.position.x += world_nx * overlap;
+                body.position.y += world_ny * overlap;
+
+                float closing = body.velocity.x * world_nx
+                              + body.velocity.y * world_ny;
+
+                // Only the part of the motion heading into the obstacle is
+                // taken away; whatever it was doing along the face it keeps.
+                if (closing < 0) {
+                    body.velocity.x -= world_nx * closing;
+                    body.velocity.y -= world_ny * closing;
+                }
+            }
+        }
+
         // The walls have the last word, so a body pushed out of the world by
         // its neighbours is put back before anything reads its position.
         for (Body& body : bodies) {
@@ -145,4 +214,18 @@ Vec2 World::position_of(int index) const {
 
 Vec2 World::velocity_of(int index) const {
     return bodies[index].velocity;
+}
+
+int World::add_obstacle(Vec2 center, Vec2 half_size, float angle) {
+    obstacles.push_back({center, half_size, angle, center, angle});
+    return static_cast<int>(obstacles.size()) - 1;
+}
+
+void World::move_obstacle(int index, Vec2 center, float angle) {
+    obstacles[index].center = center;
+    obstacles[index].angle = angle;
+}
+
+int World::obstacle_count() const {
+    return static_cast<int>(obstacles.size());
 }

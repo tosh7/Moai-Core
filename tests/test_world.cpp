@@ -138,6 +138,27 @@ void test_bodies_stay_inside_the_walls() {
     }
 }
 
+// 7. A body dropped onto an obstacle rests on it instead of falling past.
+//
+// The two heights are chosen far apart on purpose: 330 if the shelf holds it,
+// 20 if the shelf is not there at all. A test that cannot tell those apart is
+// not testing the shelf.
+void test_a_body_lands_on_an_obstacle() {
+    // Given: a shelf across the middle of the pit, and a body above it
+    World world(400, 800);
+    world.set_gravity({0, kGravity});
+    world.add_obstacle({200, 300}, {100, 10}, 0);
+    int body = world.add_body({200, 600}, 20);
+
+    // When: it is given far longer than the fall needs
+    run(world, 300);
+
+    // Then: it is sitting on the shelf — its top, plus the body's radius
+    CHECK_NEAR("resting on top of the obstacle", world.position_of(body).y, 330, 2);
+    CHECK_NEAR("no longer moving", world.velocity_of(body).y, 0, 3);
+    CHECK_TRUE("did not reach the floor", world.position_of(body).y > 100);
+}
+
 void run_world_tests() {
     test_falls_under_gravity();
     test_settles_on_the_floor();
@@ -145,4 +166,5 @@ void run_world_tests() {
     test_a_stack_comes_to_rest();
     test_radial_impulse_pushes_bodies_away();
     test_bodies_stay_inside_the_walls();
+    test_a_body_lands_on_an_obstacle();
 }
