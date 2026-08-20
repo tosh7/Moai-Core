@@ -48,6 +48,16 @@ void World::apply_radial_impulse(Vec2 center, float radius, float strength) {
 // one. Integrating the other way round leaves a stack of bodies shivering
 // instead of coming to rest.
 void World::step(float dt) {
+    // A free obstacle carries on turning at whatever speed it was left at,
+    // losing a little to friction so a knock spins it and then lets it settle.
+    constexpr float spin_damping = 0.4f;
+    for (Obstacle& obstacle : obstacles) {
+        if (obstacle.inertia > 0) {
+            obstacle.spin -= obstacle.spin * spin_damping * dt;
+            obstacle.angle += obstacle.spin * dt;
+        }
+    }
+
     for (Body& body : bodies) {
         body.velocity.x += gravity.x * dt;
         body.velocity.y += gravity.y * dt;
@@ -118,7 +128,7 @@ void World::step(float dt) {
         // falls entirely on the body: it takes the whole overlap, and the whole
         // of the impulse.
         for (Body& body : bodies) {
-            for (const Obstacle& obstacle : obstacles) {
+            for (Obstacle& obstacle : obstacles) {
                 // Work in the obstacle's own frame, where it is axis aligned
                 // and the nearest point on it is a matter of clamping.
                 float c = std::cos(obstacle.angle);
@@ -170,14 +180,43 @@ void World::step(float dt) {
                 body.position.x += world_nx * overlap;
                 body.position.y += world_ny * overlap;
 
-                float closing = body.velocity.x * world_nx
-                              + body.velocity.y * world_ny;
+                // Where on the obstacle the two are touching, measured from
+                // its middle. A blade's far end sweeps faster than its root,
+                // and leans harder on what it meets.
+                float arm_x = body.position.x - world_nx * body.radius - obstacle.center.x;
+                float arm_y = body.position.y - world_ny * body.radius - obstacle.center.y;
+
+                // What the surface is doing there: carried along by the whole
+                // obstacle, and swung around by its turning.
+                float surface_x = (obstacle.center.x - obstacle.previous_center.x) / dt
+                                - obstacle.spin * arm_y;
+                float surface_y = (obstacle.center.y - obstacle.previous_center.y) / dt
+                                + obstacle.spin * arm_x;
+
+                float closing = (body.velocity.x - surface_x) * world_nx
+                              + (body.velocity.y - surface_y) * world_ny;
 
                 // Only the part of the motion heading into the obstacle is
                 // taken away; whatever it was doing along the face it keeps.
                 if (closing < 0) {
-                    body.velocity.x -= world_nx * closing;
-                    body.velocity.y -= world_ny * closing;
+                    float leverage = arm_x * world_ny - arm_y * world_nx;
+
+                    // A held obstacle takes the whole exchange without moving.
+                    // A free one gives ground in proportion to how hard it is
+                    // to turn, and to how far out the blow lands.
+                    float share = 1;
+                    if (obstacle.inertia > 0) {
+                        share += leverage * leverage / obstacle.inertia;
+                    }
+
+                    float impulse = -closing / share;
+
+                    body.velocity.x += world_nx * impulse;
+                    body.velocity.y += world_ny * impulse;
+
+                    if (obstacle.inertia > 0) {
+                        obstacle.spin -= leverage * impulse / obstacle.inertia;
+                    }
                 }
             }
         }
@@ -202,6 +241,13 @@ void World::step(float dt) {
             }
         }
     }
+
+    // Whatever the obstacles did this step is now where they were, which is
+    // how the next one works out how fast they are travelling.
+    for (Obstacle& obstacle : obstacles) {
+        obstacle.previous_center = obstacle.center;
+        obstacle.previous_angle = obstacle.angle;
+    }
 }
 
 int World::body_count() const {
@@ -217,8 +263,33 @@ Vec2 World::velocity_of(int index) const {
 }
 
 int World::add_obstacle(Vec2 center, Vec2 half_size, float angle) {
-    obstacles.push_back({center, half_size, angle, center, angle});
+    // Inertia of zero means it does not turn, which is what a shelf or a wall
+    // wants: whatever lands on it should not set it going.
+    obstacles.push_back({center, half_size, angle, center, angle, 0, 0});
     return static_cast<int>(obstacles.size()) - 1;
+}
+
+// Giving an obstacle a spin is also what frees it to turn. Until then it is
+// held, however hard it is struck.
+void World::set_obstacle_spin(int index, float spin) {
+    Obstacle& obstacle = obstacles[index];
+    obstacle.spin = spin;
+
+    // A rectangle of uniform stuff, about its middle. The density is low
+    // enough that a falling body visibly turns a blade rather than thudding
+    // into something that will not budge.
+    constexpr float density = 0.01f;
+    float w = obstacle.half_size.x * 2;
+    float h = obstacle.half_size.y * 2;
+    obstacle.inertia = density * w * h * (w * w + h * h) / 12;
+}
+
+float World::obstacle_angle(int index) const {
+    return obstacles[index].angle;
+}
+
+float World::obstacle_spin(int index) const {
+    return obstacles[index].spin;
 }
 
 void World::move_obstacle(int index, Vec2 center, float angle) {
