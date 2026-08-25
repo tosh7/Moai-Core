@@ -23,6 +23,7 @@ class Elevator {
         int min_floor;
         std::vector<bool> up_calls;
         std::vector<bool> down_calls;
+        std::vector<bool> car_calls;
         std::optional<Direction> m_direction;
 };                  
 

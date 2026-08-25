@@ -7,6 +7,7 @@ Elevator::Elevator(int max, int min) {
     min_floor = min;
     up_calls.assign(max+1, false);
     down_calls.assign(max+1, false);
+    car_calls.assign(max+1, false);
     current_floor = 1;
 };
 
