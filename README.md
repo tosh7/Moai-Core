@@ -8,6 +8,9 @@ Core algorithms for Moai framework.
 ## Environments
 Version: C++23
 
+Building needs CMake 3.20 or newer. Ninja is used when it is installed and
+make is used when it is not, so neither has to be set up first.
+
 ## Elevator
 
 A single-car elevator that decides where to go from the calls waiting for it.
@@ -81,7 +84,7 @@ To make .a file, do below.
 1. Clone this repository
 2. run `sh build.sh`
 
-You will get .a file output under build directory.
+You will get `build/ios/libmoai.a`.
 
 The repository is also a Swift package, so it can be consumed directly by
 Xcode or by another `Package.swift`.
