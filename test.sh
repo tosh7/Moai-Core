@@ -1,14 +1,7 @@
-rm -rf build
-mkdir build
+set -e
+. ./cmake-common.sh
 
-CXX="clang++"
-if command -v xcrun >/dev/null 2>&1; then
-    CXX="xcrun clang++"
-fi
+cmake -S . -B build/host -G "$generator" >/dev/null
+cmake --build build/host
 
-$CXX -std=c++23 -Werror=switch -Isource/include \
-    source/*.cpp \
-    tests/*.cpp \
-    -o build/test_runner
-
-./build/test_runner
+./build/host/test_runner

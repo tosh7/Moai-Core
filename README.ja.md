@@ -8,6 +8,9 @@ Moai フレームワークのコアアルゴリズム。
 ## 動作環境
 Version: C++23
 
+ビルドには CMake 3.20 以降が必要です。Ninja があればそれを、無ければ make を
+使うので、どちらも事前に用意しなくて構いません。
+
 ## Elevator
 
 待っているコールから行き先を判断する、単機のエレベーターです。
@@ -76,7 +79,7 @@ world.position_of(body);                     // 今どこに描けばよいか
 1. このリポジトリを clone する
 2. `sh build.sh` を実行する
 
-build ディレクトリに .a ファイルが出力されます。
+`build/ios/libmoai.a` が出力されます。
 
 このリポジトリは Swift package でもあるため、Xcode や他の `Package.swift` から
 そのまま依存に追加できます。
