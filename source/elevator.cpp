@@ -9,7 +9,7 @@ Elevator::Elevator(int max, int min) {
     down_calls.assign(max+1, false);
     car_calls.assign(max+1, false);
     current_floor = 1;
-};
+}
 
 void Elevator::request(const Request& call) {
     if(call.floor > max_floor || call.floor < min_floor) {
@@ -25,7 +25,7 @@ void Elevator::request(const Request& call) {
             down_calls[call.floor] = true;
             break;
     }
-};
+}
 
 void Elevator::step() {
     // Look for work on either side. Whether a call is up or down does not
@@ -92,5 +92,5 @@ void Elevator::step() {
             current_floor--;
             break;
     }
-};
+}
 
