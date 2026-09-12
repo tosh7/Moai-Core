@@ -57,10 +57,90 @@ void test_reverses_when_nothing_is_ahead() {
     CHECK_EQ("ends at 9 after reversing", elevator.current_floor, 9);
 }
 
+// 6. A passenger aboard chooses a floor; the car goes there and stays
+void test_takes_a_passenger_to_the_floor_they_chose() {
+    Elevator elevator(10, 1);
+    elevator.select_floor(5);
+    CHECK_TRUE("5 lights up once chosen", elevator.is_selected(5));
+
+    for (int i = 0; i < 6; ++i) {
+        elevator.step();
+    }
+    CHECK_EQ("arrives at 5 and stays", elevator.current_floor, 5);
+    CHECK_FALSE("5 goes dark once served", elevator.is_selected(5));
+}
+
+// 7. A chosen floor is served whichever way the car happens to be heading
+//
+// A hall call only boards when it matches the heading. A car call has no
+// direction to match: the passenger is already aboard and simply gets off.
+void test_lets_a_passenger_off_whichever_way_it_is_heading() {
+    Elevator elevator(10, 1);
+    elevator.request({8, Direction::UP});
+    for (int i = 0; i < 8; ++i) {
+        elevator.step();
+    }
+    CHECK_EQ("parked at 8", elevator.current_floor, 8);
+
+    // A call from 2 sends the car down; 5 is chosen on the way.
+    elevator.request({2, Direction::DOWN});
+    elevator.select_floor(5);
+    for (int i = 0; i < 4; ++i) {
+        elevator.step();
+    }
+    CHECK_EQ("has passed 5 heading down", elevator.current_floor, 4);
+    CHECK_FALSE("5 was served on the way down", elevator.is_selected(5));
+
+    // Had 5 been skipped, the car would double back for it after 2.
+    for (int i = 0; i < 4; ++i) {
+        elevator.step();
+    }
+    CHECK_EQ("finishes at 2 with nothing left", elevator.current_floor, 2);
+}
+
+// 8. A parked car works out which way to go from where the chosen floor is
+//
+// There is no button direction to take a heading from, so it has to come
+// from the floor's position relative to the car. Test 6 covers up; this
+// covers down.
+void test_heads_down_when_the_chosen_floor_is_below() {
+    Elevator elevator(10, 1);
+    elevator.request({6, Direction::UP});
+    for (int i = 0; i < 6; ++i) {
+        elevator.step();
+    }
+    CHECK_EQ("parked at 6", elevator.current_floor, 6);
+
+    elevator.select_floor(2);
+    for (int i = 0; i < 6; ++i) {
+        elevator.step();
+    }
+    CHECK_EQ("went down to 2 and stayed", elevator.current_floor, 2);
+    CHECK_FALSE("2 goes dark once served", elevator.is_selected(2));
+}
+
+// 9. A floor the building does not have is ignored, not stored
+void test_ignores_a_floor_the_building_does_not_have() {
+    Elevator elevator(10, 1);
+    elevator.select_floor(11);
+    elevator.select_floor(0);
+    CHECK_FALSE("11 is not a floor", elevator.is_selected(11));
+    CHECK_FALSE("0 is not a floor", elevator.is_selected(0));
+
+    for (int i = 0; i < 3; ++i) {
+        elevator.step();
+    }
+    CHECK_EQ("nowhere to go", elevator.current_floor, 1);
+}
+
 void run_elevator_tests() {
     test_initial_state();
     test_moves_one_floor_per_step();
     test_stops_at_destination();
     test_serves_calls_in_travel_order();
     test_reverses_when_nothing_is_ahead();
+    test_takes_a_passenger_to_the_floor_they_chose();
+    test_lets_a_passenger_off_whichever_way_it_is_heading();
+    test_heads_down_when_the_chosen_floor_is_below();
+    test_ignores_a_floor_the_building_does_not_have();
 }
