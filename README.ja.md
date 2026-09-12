@@ -3,6 +3,8 @@ Moai フレームワークのコアアルゴリズム。
 
 [![Test](https://github.com/tosh7/Moai-Core/actions/workflows/test.yml/badge.svg)](https://github.com/tosh7/Moai-Core/actions/workflows/test.yml)
 
+**App Store で配信中:** [モアイ](https://apps.apple.com/us/app/%E3%83%A2%E3%82%A2%E3%82%A4/id6804320896) — このコアで動くエレベーターと絵文字プール。
+
 [English](README.md)
 
 ## 動作環境

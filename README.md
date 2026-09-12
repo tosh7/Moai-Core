@@ -3,6 +3,8 @@ Core algorithms for Moai framework.
 
 [![Test](https://github.com/tosh7/Moai-Core/actions/workflows/test.yml/badge.svg)](https://github.com/tosh7/Moai-Core/actions/workflows/test.yml)
 
+**Now on the App Store:** [The Moai](https://apps.apple.com/us/app/%E3%83%A2%E3%82%A2%E3%82%A4/id6804320896) — the elevator and the emoji pit, running on this core.
+
 [日本語](README.ja.md)
 
 ## Environments
