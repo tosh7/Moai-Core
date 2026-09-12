@@ -8,7 +8,7 @@ Elevator::Elevator(int max, int min) {
     up_calls.assign(max+1, false);
     down_calls.assign(max+1, false);
     car_calls.assign(max+1, false);
-    current_floor = 1;
+    current_floor = min;
 }
 
 void Elevator::request(const Request& call) {
