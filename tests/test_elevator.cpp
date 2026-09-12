@@ -133,6 +133,23 @@ void test_ignores_a_floor_the_building_does_not_have() {
     CHECK_EQ("nowhere to go", elevator.current_floor, 1);
 }
 
+// 10. Floors the registers cannot hold are brought into line, not indexed
+void test_keeps_the_building_above_ground() {
+    Elevator elevator(5, -2);
+    CHECK_EQ("basement clamped to 0", elevator.current_floor, 0);
+
+    elevator.request({-1, Direction::UP});
+    elevator.step();
+    CHECK_EQ("a call below 0 goes nowhere", elevator.current_floor, 0);
+}
+
+// 11. A top below the bottom becomes a one-floor building rather than a crash
+void test_survives_a_top_below_the_bottom() {
+    Elevator elevator(-5, 0);
+    elevator.step();
+    CHECK_EQ("one floor, nothing to do", elevator.current_floor, 0);
+}
+
 void run_elevator_tests() {
     test_initial_state();
     test_moves_one_floor_per_step();
@@ -143,4 +160,6 @@ void run_elevator_tests() {
     test_lets_a_passenger_off_whichever_way_it_is_heading();
     test_heads_down_when_the_chosen_floor_is_below();
     test_ignores_a_floor_the_building_does_not_have();
+    test_keeps_the_building_above_ground();
+    test_survives_a_top_below_the_bottom();
 }

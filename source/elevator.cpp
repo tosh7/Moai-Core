@@ -1,14 +1,18 @@
 #include "elevator.h"
 #include "directions.h"
+#include <algorithm>
 #include <vector>
 
 Elevator::Elevator(int max, int min) {
-    max_floor = max;
-    min_floor = min;
-    up_calls.assign(max+1, false);
-    down_calls.assign(max+1, false);
-    car_calls.assign(max+1, false);
-    current_floor = min;
+    // Floors index the registers, so none may be negative, and the top cannot
+    // sit below the bottom. A constructor has no way to refuse, so values that
+    // break either are brought into line instead.
+    min_floor = std::max(min, 0);
+    max_floor = std::max(max, min_floor);
+    up_calls.assign(max_floor+1, false);
+    down_calls.assign(max_floor+1, false);
+    car_calls.assign(max_floor+1, false);
+    current_floor = min_floor;
 }
 
 void Elevator::request(const Request& call) {
