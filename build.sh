@@ -1,12 +1,11 @@
-rm -rf build
-mkdir build
-mkdir temporary
+set -e
+. ./cmake-common.sh
 
-clang++ -std=c++23 -Werror=switch -Isource/include \
-    -target arm64-apple-ios13.0 \
-    -isysroot $(xcrun --sdk iphoneos --show-sdk-path) \
-    -c source/*.cpp
-    
-ar rcs build/libmoai.a *.o
-rm -rf temporary
-rm -rf *.o
+# CMake locates the device SDK itself, so no path is written down here.
+cmake -S . -B build/ios -G "$generator" \
+    -DCMAKE_SYSTEM_NAME=iOS \
+    -DCMAKE_OSX_ARCHITECTURES=arm64 \
+    -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 >/dev/null
+cmake --build build/ios
+
+echo "built build/ios/libmoai.a"
