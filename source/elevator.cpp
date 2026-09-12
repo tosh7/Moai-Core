@@ -32,7 +32,7 @@ void Elevator::step() {
     // matter here: an opposite-direction call still has to be travelled to.
     bool has_above = false;
     for (int i = current_floor + 1; i <= max_floor; i++) {
-        if (up_calls[i] || down_calls[i]) {
+        if (up_calls[i] || down_calls[i] || car_calls[i]) {
             has_above = true;
             break;
         }
@@ -40,11 +40,13 @@ void Elevator::step() {
 
     bool has_below = false;
     for (int i = current_floor - 1; i >= min_floor; i--) {
-        if (up_calls[i] || down_calls[i]) {
+        if (up_calls[i] || down_calls[i] || car_calls[i]) {
             has_below = true;
             break;
         }
     }
+
+    car_calls[current_floor] = false;
 
     // Serve the calls this floor can honour. While travelling, only the call
     // matching our heading boards; the opposite one boards too when nothing
@@ -74,7 +76,7 @@ void Elevator::step() {
     // Start a parked car moving when the only calls are on other floors.
     if (!m_direction.has_value()) {
         for (int i = min_floor; i <= max_floor; i++) {
-            if (up_calls[i] || down_calls[i]) {
+            if (up_calls[i] || down_calls[i] || car_calls[i]) {
                 m_direction = i > current_floor ? Direction::UP : Direction::DOWN;
                 break;
             }
@@ -94,3 +96,16 @@ void Elevator::step() {
     }
 }
 
+void Elevator::select_floor(int floor) {
+    if (floor > max_floor || floor < min_floor) {
+        return;
+    }
+    car_calls[floor] = true;
+}
+
+bool Elevator::is_selected(int floor) const {
+    if (floor > max_floor || floor < min_floor) {
+        return false;
+    }
+    return car_calls[floor];
+}

@@ -18,6 +18,8 @@ class Elevator {
         Elevator(int max, int min);
         void request(const Request& call);
         void step();
+        void select_floor(int floor);
+        bool is_selected(int floor) const;
     private:
         int max_floor;
         int min_floor;
