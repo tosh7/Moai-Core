@@ -16,6 +16,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # configures, so a file added afterwards would be left out of the build
 # until someone happened to configure again — a new .cpp belongs here.
 add_library(moai STATIC
+    source/blower.cpp
     source/calculator.cpp
     source/elevator.cpp
     source/world.cpp
