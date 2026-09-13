@@ -115,6 +115,32 @@ spins it and then lets it settle.
 Not yet supported: per-body mass or material, joints, and anything driving an
 obstacle — a spin, once given, only runs down.
 
+## Blower
+
+A party blower: the paper toy that unrolls when blown into and curls back up
+when let go.
+
+```cpp
+#include "blower.h"
+
+Blower blower(200);                 // 200 long, fully unrolled
+
+blower.set_breath(0.7f);            // from the mic, 0 through 1; held until set again
+blower.step(1.0f / 120);            // one slice of time
+blower.extension();                 // how far it is out, 0 through 200
+```
+
+It is a spring. Breath pushes it out, the curl of the paper pulls it back, and
+friction settles it. A steady breath holds it at a matching length — half a
+breath, halfway out; a full breath, fully unrolled — and letting go curls it
+back with a small bounce, as the toy does. It stops dead at either end.
+
+The core never hears any audio. The host reads the mic, turns loudness into a
+breath strength, and hands that over, the way the pit hands over gravity from
+the accelerometer.
+
+Not yet supported: telling breath from speech, and a tip that bends.
+
 ## How to build
 To make .a file, do below.
 1. Clone this repository
