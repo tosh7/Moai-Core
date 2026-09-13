@@ -29,6 +29,7 @@ target_include_directories(moai PUBLIC source/include)
 if(NOT CMAKE_CROSSCOMPILING)
     add_executable(test_runner
         tests/main.cpp
+        tests/test_blower.cpp
         tests/test_elevator.cpp
         tests/test_world.cpp
     )

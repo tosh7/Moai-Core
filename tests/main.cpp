@@ -1,9 +1,11 @@
 #include "check.h"
 
+void run_blower_tests();
 void run_elevator_tests();
 void run_world_tests();
 
 int main() {
+    run_blower_tests();
     run_elevator_tests();
     run_world_tests();
 
