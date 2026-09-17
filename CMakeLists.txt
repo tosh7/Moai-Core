@@ -19,6 +19,7 @@ add_library(moai STATIC
     source/blower.cpp
     source/calculator.cpp
     source/elevator.cpp
+    source/fft.cpp
     source/world.cpp
 )
 
