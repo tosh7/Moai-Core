@@ -1,6 +1,7 @@
 #ifndef VOICE_CHANGER_H
 #define VOICE_CHANGER_H
 
+#include <deque>
 #include <vector>
 
 // Shifts the pitch of a voice as it streams through. Samples go in, samples
@@ -34,6 +35,9 @@ class VoiceChanger {
         // next. Overlap-add cannot hand a sample out until every frame that
         // touches it has been added in.
         std::vector<float> overlap;
+
+        // Finished samples waiting to go out, one per sample that comes in.
+        std::deque<float> ready;
 };
 
 #endif

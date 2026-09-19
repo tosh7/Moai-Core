@@ -20,6 +20,7 @@ add_library(moai STATIC
     source/calculator.cpp
     source/elevator.cpp
     source/fft.cpp
+    source/voice_changer.cpp
     source/world.cpp
 )
 
