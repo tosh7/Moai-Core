@@ -17,6 +17,30 @@ static float hann(int k, int n) {
     return 0.5f - 0.5f * std::cos(2 * std::numbers::pi_v<float> * k / n);
 }
 
+// Moves every bin to ratio times its frequency and leaves the phases as
+// they were. Harmonics stay harmonic, so the pitch really moves, but with
+// nothing done about phase each frame starts wherever it likes and the
+// seams between frames give it a robotic ring.
+//
+// Only the lower half is moved. The upper half is its mirror image, and is
+// rebuilt as such afterwards so the inverse transform stays real.
+static void shift_bins(std::complex<float>* frame, int n, float ratio) {
+    int half = n / 2;
+    std::vector<std::complex<float>> moved(half + 1);
+    for (int j = 0; j <= half; j++) {
+        int target = static_cast<int>(std::lround(j * ratio));
+        if (target <= half) {
+            moved[target] += frame[j];
+        }
+    }
+    for (int k = 0; k <= half; k++) {
+        frame[k] = moved[k];
+    }
+    for (int k = 1; k < half; k++) {
+        frame[n - k] = std::conj(frame[k]);
+    }
+}
+
 VoiceChanger::VoiceChanger(int sample_rate, int window) {
     this->sample_rate = sample_rate;
 
@@ -60,7 +84,9 @@ void VoiceChanger::process(const float* in, float* out, int count) {
             frame[k] = pending[k] * hann(k, window);
         }
         fft(frame.data(), window);
-        // This is where the pitch will move.
+        if (semitones != 0) {
+            shift_bins(frame.data(), window, std::exp2(semitones / 12.0f));
+        }
         ifft(frame.data(), window);
 
         // Window again and add onto what earlier frames left here.
