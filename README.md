@@ -141,6 +141,38 @@ the accelerometer.
 
 Not yet supported: telling breath from speech, and a tip that bends.
 
+## VoiceChanger
+
+Shifts the pitch of a voice as it streams through, after the bow tie in
+Detective Conan.
+
+```cpp
+#include "voice_changer.h"
+
+VoiceChanger changer(48000, 1024);   // the host's sample rate; a 1024-sample window
+
+changer.set_pitch(12);               // an octave up; -12 down; 0 leaves it alone
+changer.process(in, out, count);     // with each buffer the host receives
+```
+
+Unlike the blower, the audio itself goes through the core: samples in,
+samples out, in whatever buffer size the host's audio unit likes. The mic and
+the speaker stay with the host. The output runs one window behind the input,
+which at 1024 samples and 48 kHz is about 21 ms — the delay a host will hear.
+
+Inside is a phase vocoder over a short-time Fourier transform. Each frame is
+windowed, transformed, and every bin moved to the ratio of the shift; the
+moved bin's phase is then run forward at the component's true rate, measured
+from how its phase advanced since the last frame, so a tone between two bins
+lands where it was sent rather than scattering either side of it.
+
+`fft.h` holds the transform underneath, an in-place radix-2 Cooley–Tukey, as
+two free functions. It is there for anything else that needs one.
+
+Not yet supported: holding the formants still, so a shifted voice still sounds
+like the same person rather than a smaller or larger one; and processing
+without allocating, which an audio thread will want.
+
 ## How to build
 To make .a file, do below.
 1. Clone this repository
