@@ -1,6 +1,7 @@
 #ifndef VOICE_CHANGER_H
 #define VOICE_CHANGER_H
 
+#include <complex>
 #include <deque>
 #include <vector>
 
@@ -38,6 +39,14 @@ class VoiceChanger {
 
         // Finished samples waiting to go out, one per sample that comes in.
         std::deque<float> ready;
+
+        // One entry per bin up to the middle. Where each bin's phase was
+        // last frame, to tell how fast it is really turning; and how far
+        // each output bin's phase has been run forward so far.
+        std::vector<float> last_phase;
+        std::vector<float> phase_sum;
+
+        void shift(std::complex<float>* frame, float ratio);
 };
 
 #endif
