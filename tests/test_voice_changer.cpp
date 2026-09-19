@@ -67,20 +67,41 @@ float energy_near(const std::vector<float>& x, float hz, float width) {
     return total;
 }
 
-// Shifts a tone that sits exactly on a frame bin and reports where the
-// energy went: gone from where it was, and near where it was sent.
-void check_shift(float semitones, const char* label) {
+// The loudest frequency in the output, from the same long look.
+float peak_hz(const std::vector<float>& x) {
+    const int n = 8192;
+    std::vector<std::complex<float>> f(n);
+    for (int k = 0; k < n; k++) {
+        f[k] = x[8192 + k];
+    }
+    fft(f.data(), n);
+    int best = 1;
+    for (int k = 2; k < n / 2; k++) {
+        if (std::abs(f[k]) > std::abs(f[best])) {
+            best = k;
+        }
+    }
+    return best * static_cast<float>(kRate) / n;
+}
+
+// How finely the long look can place a peak.
+constexpr float kLookHz = static_cast<float>(kRate) / 8192;
+
+// Shifts a tone and reports where it went: the peak on the target, and
+// whatever leaks back to the source well below it.
+void check_shift(float from, float semitones, const char* label) {
     VoiceChanger changer(kRate, kWindow);
     changer.set_pitch(semitones);
-    const float from = 10 * kBinHz;
     std::vector<float> in = sine(from, kRate);
     std::vector<float> out = run(changer, in, kWindow);
 
     float to = from * std::exp2(semitones / 12);
+    CHECK_NEAR(std::string(label) + ": peak on the target", peak_hz(out), to, kLookHz);
+
     float left_behind = energy_near(out, from, kBinHz / 2);
     float arrived = energy_near(out, to, 2 * kBinHz);
-    CHECK_TRUE(std::string(label) + ": nothing left at the source", left_behind < 1);
-    CHECK_TRUE(std::string(label) + ": energy near the target", arrived > 1000);
+    CHECK_TRUE(std::string(label) + ": source at least 30 dB down",
+               left_behind * 1000 < arrived);
 }
 
 }  // namespace
@@ -160,18 +181,27 @@ void test_one_large_buffer() {
     CHECK_NEAR("whole second in one go", worst_error(in, out), 0, 1e-3);
 }
 
-// 6. A shift moves the tone: up an octave, down an octave, up a fifth
-//
-// Phases are left alone, so the energy scatters within a couple of bins of
-// the target rather than landing on it. That scatter is the robotic sound,
-// and the reason a phase vocoder comes next.
-void test_shift_moves_the_tone() {
-    check_shift(12, "octave up");
-    check_shift(-12, "octave down");
-    check_shift(7, "fifth up");
+// 6. A tone on a bin lands on the target: up an octave, down one, up a fifth
+void test_shift_moves_a_tone_on_a_bin() {
+    const float on_bin = 10 * kBinHz;
+    check_shift(on_bin, 12, "octave up");
+    check_shift(on_bin, -12, "octave down");
+    check_shift(on_bin, 7, "fifth up");
 }
 
-// 7. Shifted output stays real and bounded — no NaN, nothing blowing up
+// 7. A tone between bins lands on the target too
+//
+// This is what the phase vocoder is for. Moving magnitudes alone puts a
+// tone only where a bin is; 440 Hz sits between two, and doubling it by
+// bins gives 843 or 937, not 880. Following the phase finds the true
+// frequency between the bins and moves that.
+void test_shift_moves_a_tone_between_bins() {
+    check_shift(440, 12, "440 up an octave");
+    check_shift(440, -12, "440 down an octave");
+    check_shift(440, 7, "440 up a fifth");
+}
+
+// 8. Shifted output stays real and bounded — no NaN, nothing blowing up
 void test_shift_stays_sane() {
     // GIVEN
     VoiceChanger changer(kRate, kWindow);
@@ -193,6 +223,7 @@ void run_voice_changer_tests() {
     test_silence_gives_silence();
     test_awkward_buffers_leave_no_seam();
     test_one_large_buffer();
-    test_shift_moves_the_tone();
+    test_shift_moves_a_tone_on_a_bin();
+    test_shift_moves_a_tone_between_bins();
     test_shift_stays_sane();
 }
