@@ -64,12 +64,15 @@ void World::step(float dt) {
     }
 
     for (Body& body : bodies) {
-        body.velocity.x += gravity.x * dt;
-        body.velocity.y += gravity.y * dt;
-
+        // Drag before gravity, so that where the two balance is exactly
+        // gravity over drag whatever the step; the other way round the
+        // fresh gravity is trimmed too and the balance lands a little short.
         float keep = std::max(0.0f, 1 - drag * dt);
         body.velocity.x *= keep;
         body.velocity.y *= keep;
+
+        body.velocity.x += gravity.x * dt;
+        body.velocity.y += gravity.y * dt;
 
         body.position.x += body.velocity.x * dt;
         body.position.y += body.velocity.y * dt;
