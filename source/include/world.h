@@ -14,6 +14,11 @@ class World {
 
         int add_body(Vec2 position, float radius);
         void set_gravity(Vec2 g);
+
+        // How quickly a body loses speed to what it moves through, per
+        // second: 0 is air and changes nothing, a few is water. Bodies only;
+        // obstacles are not slowed.
+        void set_drag(float drag);
         void set_velocity(int index, Vec2 v);
         void apply_radial_impulse(Vec2 center, float radius, float strength);
 
@@ -61,6 +66,7 @@ class World {
         float width;
         float height;
         Vec2 gravity;
+        float drag;
         std::vector<Body> bodies;
         std::vector<Obstacle> obstacles;
 };
