@@ -10,6 +10,7 @@ World::World(float w, float h) {
     width = w;
     height = h;
     gravity = {0, 0};
+    drag = 0;
 }
 
 int World::add_body(Vec2 position, float radius) {
@@ -19,6 +20,10 @@ int World::add_body(Vec2 position, float radius) {
 
 void World::set_gravity(Vec2 g) {
     gravity = g;
+}
+
+void World::set_drag(float drag) {
+    this->drag = drag;
 }
 
 void World::set_velocity(int index, Vec2 v) {
@@ -61,6 +66,10 @@ void World::step(float dt) {
     for (Body& body : bodies) {
         body.velocity.x += gravity.x * dt;
         body.velocity.y += gravity.y * dt;
+
+        float keep = std::max(0.0f, 1 - drag * dt);
+        body.velocity.x *= keep;
+        body.velocity.y *= keep;
 
         body.position.x += body.velocity.x * dt;
         body.position.y += body.velocity.y * dt;
