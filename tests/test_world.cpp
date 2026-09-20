@@ -159,6 +159,70 @@ void test_a_body_lands_on_an_obstacle() {
     CHECK_TRUE("did not reach the floor", world.position_of(body).y > 100);
 }
 
+// 8. In something thick, a body sinks at a steady speed rather than falling
+//
+// Test 1 shows a body in air a second on still gaining speed. The same body
+// in water reaches a speed at which gravity and drag agree, and stays there:
+// far slower than the fall, and the same from one second to the next.
+void test_drag_settles_a_fall_to_a_steady_speed() {
+    // Given: a tall pit of something thick, and a body high up in it
+    World world(400, 4000);
+    world.set_gravity({0, kGravity});
+    world.set_drag(5);
+    int body = world.add_body({200, 3900}, 10);
+
+    // When: it has fallen for two seconds, and then for one more
+    run(world, 2 * kStepsPerSecond);
+    float after_two = world.velocity_of(body).y;
+    run(world, kStepsPerSecond);
+    float after_three = world.velocity_of(body).y;
+
+    // Then: it is sinking, far slower than a fall, and no faster than before
+    CHECK_TRUE("sinking, not rising", after_two < 0);
+    CHECK_TRUE("far slower than a fall in air", after_two > kGravity / 2);
+    CHECK_NEAR("at a steady speed", after_three, after_two, 0.1);
+
+    // gravity / drag is exactly where the two balance: 1000 / 5 = 200
+    CHECK_NEAR("at the speed where gravity and drag agree", after_three, -200, 0.5);
+}
+
+// 9. Drag alone brings a moving body to rest
+void test_drag_brings_a_body_to_rest() {
+    // Given: no gravity, thick medium, a body shoved sideways
+    World world(400, 400);
+    world.set_gravity({0, 0});
+    world.set_drag(5);
+    int body = world.add_body({100, 200}, 10);
+    world.set_velocity(body, {300, 0});
+
+    // When: a moment passes, then a while
+    run(world, 10);
+    float soon = world.velocity_of(body).x;
+    run(world, 3 * kStepsPerSecond);
+    float later = world.velocity_of(body).x;
+
+    // Then: still moving at first, all but stopped later, never reversed
+    CHECK_TRUE("still going after a moment", soon > 100);
+    CHECK_NEAR("all but stopped later", later, 0, 1);
+    CHECK_TRUE("never turned back", later >= 0);
+}
+
+// 10. A drag too large for the step stops the body instead of reversing it
+void test_excessive_drag_stops_rather_than_reverses() {
+    // Given: a drag no step of 1/60 could survive
+    World world(400, 400);
+    world.set_gravity({0, 0});
+    world.set_drag(1000);
+    int body = world.add_body({100, 200}, 10);
+    world.set_velocity(body, {300, 0});
+
+    // When: one step
+    run(world, 1);
+
+    // Then: stopped, not thrown backwards
+    CHECK_EQ("stopped dead", world.velocity_of(body).x, 0.0f);
+}
+
 void run_world_tests() {
     test_falls_under_gravity();
     test_settles_on_the_floor();
@@ -167,4 +231,7 @@ void run_world_tests() {
     test_radial_impulse_pushes_bodies_away();
     test_bodies_stay_inside_the_walls();
     test_a_body_lands_on_an_obstacle();
+    test_drag_settles_a_fall_to_a_steady_speed();
+    test_drag_brings_a_body_to_rest();
+    test_excessive_drag_stops_rather_than_reverses();
 }
