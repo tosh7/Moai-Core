@@ -91,6 +91,9 @@ class World {
         std::vector<Body> bodies;
         std::vector<Obstacle> obstacles;
         std::vector<Flow> flows;
+
+        // The medium's velocity at a point, summed over every flow.
+        Vec2 medium_velocity_at(Vec2 position) const;
 };
 
 #endif

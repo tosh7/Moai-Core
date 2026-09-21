@@ -67,9 +67,13 @@ void World::step(float dt) {
         // Drag before gravity, so that where the two balance is exactly
         // gravity over drag whatever the step; the other way round the
         // fresh gravity is trimmed too and the balance lands a little short.
+        // Drag pulls the body's velocity towards the medium's, not towards
+        // rest: still water slows it, moving water carries it, and once it
+        // moves with the water there is nothing left to pull.
+        Vec2 water = medium_velocity_at(body.position);
         float keep = std::max(0.0f, 1 - drag * dt);
-        body.velocity.x *= keep;
-        body.velocity.y *= keep;
+        body.velocity.x = water.x + (body.velocity.x - water.x) * keep;
+        body.velocity.y = water.y + (body.velocity.y - water.y) * keep;
 
         body.velocity.x += gravity.x * dt;
         body.velocity.y += gravity.y * dt;
@@ -311,4 +315,48 @@ void World::move_obstacle(int index, Vec2 center, float angle) {
 
 int World::obstacle_count() const {
     return static_cast<int>(obstacles.size());
+}
+
+int World::add_flow(Vec2 origin, Vec2 direction, float reach, float width) {
+    flows.push_back({origin, direction, reach, width, 0});
+    return static_cast<int>(flows.size()) - 1;
+}
+
+void World::set_flow(int index, float strength) {
+    flows[index].strength = std::clamp(strength, 0.0f, 1.0f);
+}
+
+float World::flow_strength(int index) const {
+    return flows[index].strength;
+}
+
+Vec2 World::medium_velocity_at(Vec2 position) const {
+    Vec2 total = {0, 0};
+    for (const Flow& flow : flows) {
+        float speed = std::sqrt(flow.direction.x * flow.direction.x
+                                + flow.direction.y * flow.direction.y);
+        if (speed == 0 || flow.strength == 0) {
+            continue;
+        }
+
+        // Where the point sits in the flow's own terms: how far along the
+        // column from the origin, and how far out from its centre line.
+        float ux = flow.direction.x / speed;
+        float uy = flow.direction.y / speed;
+        float to_x = position.x - flow.origin.x;
+        float to_y = position.y - flow.origin.y;
+        float along = to_x * ux + to_y * uy;
+        float across = std::abs(to_x * uy - to_y * ux);
+
+        if (along < 0 || along > flow.reach || across > flow.width) {
+            continue;
+        }
+
+        // Full at the origin, fading to nothing at the reach and at the
+        // edge of the column.
+        float fade = (1 - along / flow.reach) * (1 - across / flow.width);
+        total.x += flow.direction.x * flow.strength * fade;
+        total.y += flow.direction.y * flow.strength * fade;
+    }
+    return total;
 }
