@@ -223,6 +223,127 @@ void test_excessive_drag_stops_rather_than_reverses() {
     CHECK_EQ("stopped dead", world.velocity_of(body).x, 0.0f);
 }
 
+// 11. A jet lifts what is over it and leaves what is beside it alone
+void test_a_flow_carries_what_is_in_it() {
+    // Given: water, a jet in the floor pointing up, a body over it and one aside
+    World world(400, 800);
+    world.set_gravity({0, kGravity});
+    world.set_drag(5);
+    int jet = world.add_flow({200, 0}, {0, 600}, 400, 40);
+    int over = world.add_body({200, 20}, 10);
+    int aside = world.add_body({300, 20}, 10);
+
+    // When: the jet runs for a second
+    world.set_flow(jet, 1);
+    run(world, kStepsPerSecond);
+
+    // Then: the one over it has risen, the one beside it has not
+    CHECK_TRUE("lifted off the floor", world.position_of(over).y > 100);
+    CHECK_NEAR("beside it, still on the floor", world.position_of(aside).y, 10, 1);
+}
+
+// 12. A body in a jet rises to where the fading jet balances gravity, and hangs
+//
+// The jet carries water up at 600 at the nozzle, fading linearly to nothing
+// at 400. A body sinks at gravity / drag = 200, so it hangs where the water
+// rises at 200: two thirds of the way up.
+void test_a_flow_holds_a_body_where_it_balances_gravity() {
+    // Given
+    World world(400, 800);
+    world.set_gravity({0, kGravity});
+    world.set_drag(5);
+    int jet = world.add_flow({200, 0}, {0, 600}, 400, 40);
+    int body = world.add_body({200, 20}, 10);
+
+    // When: long enough to settle
+    world.set_flow(jet, 1);
+    run(world, 4 * kStepsPerSecond);
+
+    // Then
+    CHECK_NEAR("hanging two thirds of the way up", world.position_of(body).y, 400 * 2 / 3.0, 5);
+    CHECK_NEAR("and not moving", world.velocity_of(body).y, 0, 2);
+}
+
+// 13. Turned off, a jet lets what it held sink back
+void test_a_flow_turned_off_lets_go() {
+    // Given: a body held up by a jet
+    World world(400, 800);
+    world.set_gravity({0, kGravity});
+    world.set_drag(5);
+    int jet = world.add_flow({200, 0}, {0, 600}, 400, 40);
+    int body = world.add_body({200, 20}, 10);
+    world.set_flow(jet, 1);
+    run(world, 3 * kStepsPerSecond);
+    CHECK_TRUE("held up first", world.position_of(body).y > 200);
+
+    // When: the jet is turned off
+    world.set_flow(jet, 0);
+    run(world, 3 * kStepsPerSecond);
+
+    // Then: back on the floor
+    CHECK_NEAR("sank back to the floor", world.position_of(body).y, 10, 1);
+}
+
+// 14. Half strength lifts less than full
+void test_a_weaker_flow_lifts_less() {
+    // Given: two tanks alike but for the jet's strength
+    World weak(400, 800), strong(400, 800);
+    for (World* w : {&weak, &strong}) {
+        w->set_gravity({0, kGravity});
+        w->set_drag(5);
+        w->add_flow({200, 0}, {0, 600}, 400, 40);
+        w->add_body({200, 20}, 10);
+    }
+
+    // When
+    weak.set_flow(0, 0.5f);
+    strong.set_flow(0, 1);
+    run(weak, 4 * kStepsPerSecond);
+    run(strong, 4 * kStepsPerSecond);
+
+    // Then
+    CHECK_TRUE("half the jet, lower", weak.position_of(0).y < strong.position_of(0).y);
+    CHECK_TRUE("but still lifted", weak.position_of(0).y > 50);
+}
+
+// 15. A flow in air is a fan: with no drag there is nothing to carry with
+void test_a_flow_needs_drag_to_carry() {
+    // Given: the same jet, but no drag
+    World world(400, 800);
+    world.set_gravity({0, 0});
+    world.set_drag(0);
+    int jet = world.add_flow({200, 0}, {0, 600}, 400, 40);
+    int body = world.add_body({200, 20}, 10);
+
+    // When
+    world.set_flow(jet, 1);
+    run(world, kStepsPerSecond);
+
+    // Then: drag is the only way a flow reaches a body
+    CHECK_NEAR("unmoved without drag", world.position_of(body).y, 20, 0.01);
+}
+
+// 16. Beside the column the water is still, not pushed the other way
+//
+// Test 11 has its bystander on the floor, where a wrong push down would be
+// hidden by the wall. This one floats it mid-water with no gravity, so any
+// push at all shows.
+void test_beside_a_flow_the_medium_is_still() {
+    // Given: no gravity, a jet, a body floating well outside its width
+    World world(400, 800);
+    world.set_gravity({0, 0});
+    world.set_drag(5);
+    int jet = world.add_flow({200, 0}, {0, 600}, 400, 40);
+    int body = world.add_body({300, 200}, 10);
+
+    // When
+    world.set_flow(jet, 1);
+    run(world, kStepsPerSecond);
+
+    // Then: exactly where it was
+    CHECK_NEAR("not moved at all", world.position_of(body).y, 200, 0.01);
+}
+
 void run_world_tests() {
     test_falls_under_gravity();
     test_settles_on_the_floor();
@@ -234,4 +355,10 @@ void run_world_tests() {
     test_drag_settles_a_fall_to_a_steady_speed();
     test_drag_brings_a_body_to_rest();
     test_excessive_drag_stops_rather_than_reverses();
+    test_a_flow_carries_what_is_in_it();
+    test_a_flow_holds_a_body_where_it_balances_gravity();
+    test_a_flow_turned_off_lets_go();
+    test_a_weaker_flow_lifts_less();
+    test_a_flow_needs_drag_to_carry();
+    test_beside_a_flow_the_medium_is_still();
 }
