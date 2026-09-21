@@ -40,6 +40,19 @@ class World {
         float obstacle_angle(int index) const;
         float obstacle_spin(int index) const;
 
+        // A region where the medium itself is moving — a jet, a fan. A body
+        // in it is carried along, since drag acts against the medium's
+        // velocity rather than against rest. origin is where it starts;
+        // direction is which way the medium moves and how fast, at full
+        // strength; it fades to nothing reach away from the origin and
+        // width away from its centre line.
+        int add_flow(Vec2 origin, Vec2 direction, float reach, float width);
+
+        // 0 is off, 1 is full. Held until set again, so a jet that should
+        // die away after a press is the caller's to turn down each step.
+        void set_flow(int index, float strength);
+        float flow_strength(int index) const;
+
     private:
         struct Body {
             Vec2 position;
@@ -63,12 +76,21 @@ class World {
             float inertia;
         };
 
+        struct Flow {
+            Vec2 origin;
+            Vec2 direction;
+            float reach;
+            float width;
+            float strength;
+        };
+
         float width;
         float height;
         Vec2 gravity;
         float drag;
         std::vector<Body> bodies;
         std::vector<Obstacle> obstacles;
+        std::vector<Flow> flows;
 };
 
 #endif
