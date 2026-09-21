@@ -53,11 +53,24 @@ class World {
         void set_flow(int index, float strength);
         float flow_strength(int index) const;
 
+        // A held body is out of the physics and in the host's hands: gravity,
+        // drag and flows leave it alone, and it goes where move_body puts it.
+        // It is still there to the others, which bump off it as off a wall.
+        // A finger dragging something, a ring caught on a peg.
+        void hold_body(int index);
+        void move_body(int index, Vec2 position);      // held bodies only; others ignore it
+
+        // Back into the physics, setting off at the velocity given — the
+        // finger's speed when it let go, or zero to drop it where it is.
+        void release_body(int index, Vec2 velocity);
+        bool is_held(int index) const;
+
     private:
         struct Body {
             Vec2 position;
             Vec2 velocity;
             float radius;
+            bool held;
         };
 
         struct Obstacle {
