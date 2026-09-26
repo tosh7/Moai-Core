@@ -64,6 +64,7 @@ void World::step(float dt) {
     }
 
     for (Body& body : bodies) {
+        if (body.held) continue;
         // Drag before gravity, so that where the two balance is exactly
         // gravity over drag whatever the step; the other way round the
         // fresh gravity is trimmed too and the balance lands a little short.
@@ -94,6 +95,9 @@ void World::step(float dt) {
         // is never pushed apart twice, and so a body never meets itself.
         for (auto a = bodies.begin(); a != bodies.end(); ++a) {
             for (auto b = std::next(a); b != bodies.end(); ++b) {
+                float a_share = a->held ? 0.0f : (b->held ? 1.0f : 0.5f);
+                float b_share = b->held ? 0.0f : (a->held ? 1.0f : 0.5f);
+                if (a_share == 0 && b_share == 0) continue;
                 float dx = b->position.x - a->position.x;
                 float dy = b->position.y - a->position.y;
                 float distance = std::sqrt(dx * dx + dy * dy);
@@ -112,11 +116,11 @@ void World::step(float dt) {
                 // would hide them from the next pass, and the pass after that
                 // is where their speeds finish cancelling out.
                 constexpr float recovery = 0.8f;
-                float push = overlap * recovery * 0.5f;
-                a->position.x -= nx * push;
-                a->position.y -= ny * push;
-                b->position.x += nx * push;
-                b->position.y += ny * push;
+                float push = overlap * recovery;
+                a->position.x -= nx * push * a_share;
+                a->position.y -= ny * push * a_share;
+                b->position.x += nx * push * b_share;
+                b->position.y += ny * push * b_share;
 
                 float closing = (b->velocity.x - a->velocity.x) * nx
                               + (b->velocity.y - a->velocity.y) * ny;
@@ -131,12 +135,12 @@ void World::step(float dt) {
                 // gravity should not bounce off it; only a real impact does.
                 constexpr float bounce_threshold = 60.0f;
                 float restitution = -closing > bounce_threshold ? 0.5f : 0.0f;
-                float impulse = -(1 + restitution) * closing * 0.5f;
+                float impulse = -(1 + restitution) * closing;
 
-                a->velocity.x -= impulse * nx;
-                a->velocity.y -= impulse * ny;
-                b->velocity.x += impulse * nx;
-                b->velocity.y += impulse * ny;
+                a->velocity.x -= impulse * nx * a_share;
+                a->velocity.y -= impulse * ny * a_share;
+                b->velocity.x += impulse * nx * b_share;
+                b->velocity.y += impulse * ny * b_share;
             }
         }
 
@@ -144,6 +148,7 @@ void World::step(float dt) {
         // falls entirely on the body: it takes the whole overlap, and the whole
         // of the impulse.
         for (Body& body : bodies) {
+            if (body.held) continue;
             for (Obstacle& obstacle : obstacles) {
                 // Work in the obstacle's own frame, where it is axis aligned
                 // and the nearest point on it is a matter of clamping.
@@ -240,6 +245,7 @@ void World::step(float dt) {
         // The walls have the last word, so a body pushed out of the world by
         // its neighbours is put back before anything reads its position.
         for (Body& body : bodies) {
+            if (body.held) continue;
             if (body.position.x < body.radius) {
                 body.position.x = body.radius;
                 body.velocity.x = 0;
