@@ -344,6 +344,122 @@ void test_beside_a_flow_the_medium_is_still() {
     CHECK_NEAR("not moved at all", world.position_of(body).y, 200, 0.01);
 }
 
+// 17. A held body is out of the physics: gravity does not move it
+void test_a_held_body_ignores_gravity() {
+    // Given: a body held in mid-air
+    World world(400, 800);
+    world.set_gravity({0, kGravity});
+    int body = world.add_body({200, 400}, 10);
+    world.hold_body(body);
+
+    // When: a second passes
+    run(world, kStepsPerSecond);
+
+    // Then: exactly where it was, and not moving
+    CHECK_TRUE("held", world.is_held(body));
+    CHECK_NEAR("not fallen", world.position_of(body).y, 400, 0.001);
+    CHECK_NEAR("not moving", world.velocity_of(body).y, 0, 0.001);
+}
+
+// 18. A body dropped onto a held one rests on it, and the held one stays put
+//
+// This is a ring caught on a peg with the next ring landing on it.
+void test_a_body_rests_on_a_held_one() {
+    // Given: a held body, and a free one above it
+    World world(400, 800);
+    world.set_gravity({0, kGravity});
+    int held = world.add_body({200, 300}, 20);
+    world.hold_body(held);
+    int free = world.add_body({200, 500}, 10);
+
+    // When: long enough to land and settle
+    run(world, 300);
+
+    // Then: the held one has not given way, the free one sits on top of it
+    CHECK_NEAR("held one not pushed down", world.position_of(held).y, 300, 0.001);
+    CHECK_NEAR("free one resting on top", world.position_of(free).y, 330, 1);
+    CHECK_NEAR("and still", world.velocity_of(free).y, 0, 3);
+}
+
+// 19. A held body goes exactly where it is put, and pushes what is in the way
+//
+// This is a finger dragging a drop into another.
+void test_a_held_body_is_put_where_the_host_says() {
+    // Given: no gravity, a held body and a free one in its path
+    World world(400, 800);
+    world.set_gravity({0, 0});
+    int finger = world.add_body({100, 200}, 20);
+    int other = world.add_body({200, 200}, 20);
+    world.hold_body(finger);
+
+    // When: it is moved a little each step, towards and past the other
+    for (int i = 0; i < kStepsPerSecond; ++i) {
+        world.move_body(finger, {100.0f + i * 2.0f, 200});
+        world.step(kStep);
+    }
+
+    // Then: the held one is exactly where it was last put, the other pushed ahead
+    CHECK_NEAR("held one where it was put", world.position_of(finger).x, 218, 0.001);
+    CHECK_TRUE("other pushed clear ahead of it",
+               world.position_of(other).x >= world.position_of(finger).x + 40 - 0.5f);
+}
+
+// 20. Let go, it sets off at the velocity given and is back in the physics
+void test_a_released_body_sets_off_and_falls() {
+    // Given: a body held in mid-air
+    World world(400, 800);
+    world.set_gravity({0, kGravity});
+    int body = world.add_body({100, 400}, 10);
+    world.hold_body(body);
+    run(world, 10);
+
+    // When: let go moving sideways, and given a moment
+    world.release_body(body, {300, 0});
+    run(world, 10);
+
+    // Then: no longer held, carrying on sideways, and falling
+    CHECK_FALSE("no longer held", world.is_held(body));
+    CHECK_NEAR("carrying on sideways", world.velocity_of(body).x, 300, 0.001);
+    CHECK_TRUE("and falling", world.velocity_of(body).y < 0);
+}
+
+// 21. Moving or releasing a body that is not held does nothing
+void test_move_and_release_ignore_a_free_body() {
+    // Given: a free body, moving
+    World world(400, 800);
+    world.set_gravity({0, 0});
+    int body = world.add_body({100, 400}, 10);
+    world.set_velocity(body, {50, 0});
+
+    // When: told to move and to release without having been held
+    world.move_body(body, {300, 300});
+    world.release_body(body, {-500, 0});
+
+    // Then: neither took
+    CHECK_NEAR("not moved", world.position_of(body).x, 100, 0.001);
+    CHECK_NEAR("velocity not overwritten", world.velocity_of(body).x, 50, 0.001);
+    CHECK_FALSE("never held", world.is_held(body));
+}
+
+// 22. A held body is not pushed out of an obstacle or a wall it was put into
+void test_a_held_body_is_not_pushed_out() {
+    // Given: a shelf, and a body held right inside it; another held past the wall
+    World world(400, 800);
+    world.set_gravity({0, kGravity});
+    world.add_obstacle({200, 300}, {100, 10}, 0);
+    int inside = world.add_body({200, 300}, 10);
+    int beyond = world.add_body({-50, 400}, 10);
+    world.hold_body(inside);
+    world.hold_body(beyond);
+
+    // When
+    run(world, 10);
+
+    // Then: both exactly where they were put
+    CHECK_NEAR("left inside the shelf", world.position_of(inside).y, 300, 0.001);
+    CHECK_NEAR("left beyond the wall", world.position_of(beyond).x, -50, 0.001);
+}
+
 void run_world_tests() {
     test_falls_under_gravity();
     test_settles_on_the_floor();
@@ -361,4 +477,10 @@ void run_world_tests() {
     test_a_weaker_flow_lifts_less();
     test_a_flow_needs_drag_to_carry();
     test_beside_a_flow_the_medium_is_still();
+    test_a_held_body_ignores_gravity();
+    test_a_body_rests_on_a_held_one();
+    test_a_held_body_is_put_where_the_host_says();
+    test_a_released_body_sets_off_and_falls();
+    test_move_and_release_ignore_a_free_body();
+    test_a_held_body_is_not_pushed_out();
 }
