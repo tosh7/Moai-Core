@@ -372,3 +372,11 @@ void World::move_body(int index, Vec2 position) {
     }
     bodies[index].position = position;
 }
+
+void World::release_body(int index, Vec2 velocity) {
+    if (!bodies[index].held) {
+        return;
+    }
+    bodies[index].velocity = velocity;
+    bodies[index].held = false;
+}
