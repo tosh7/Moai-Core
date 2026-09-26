@@ -360,3 +360,8 @@ Vec2 World::medium_velocity_at(Vec2 position) const {
     }
     return total;
 }
+
+void World::hold_body(int index) {
+    bodies[index].held = true;
+    bodies[index].velocity = {0, 0};
+}
