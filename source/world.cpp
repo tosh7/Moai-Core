@@ -365,3 +365,10 @@ void World::hold_body(int index) {
     bodies[index].held = true;
     bodies[index].velocity = {0, 0};
 }
+
+void World::move_body(int index, Vec2 position) {
+    if (!bodies[index].held) {
+        return;
+    }
+    bodies[index].position = position;
+}
