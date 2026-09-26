@@ -380,3 +380,7 @@ void World::release_body(int index, Vec2 velocity) {
     bodies[index].velocity = velocity;
     bodies[index].held = false;
 }
+
+bool World::is_held(int index) const {
+    return bodies[index].held;
+}
