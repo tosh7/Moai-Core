@@ -21,6 +21,7 @@ add_library(moai STATIC
     source/elevator.cpp
     source/fft.cpp
     source/voice_changer.cpp
+    source/water_game.cpp
     source/world.cpp
 )
 
