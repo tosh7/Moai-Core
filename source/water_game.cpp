@@ -1,5 +1,7 @@
 #include "water_game.h"
 
+#include <cmath>
+
 // Rings sink slowly through water: gravity pulls, drag holds them back, and
 // they settle at kSink / kDrag, a leisurely 200 a second.
 constexpr float kSink = 1000;
@@ -51,4 +53,18 @@ int WaterGame::rings_on(int peg) const {
 
 float WaterGame::jet_strength(int jet) const {
     return world.flow_strength(jets[jet].flow);
+}
+
+void WaterGame::pump(int jet) {
+    world.set_flow(jets[jet].flow, 1);
+}
+
+void WaterGame::set_down(Vec2 direction) {
+    // Only the direction counts; how hard the rings sink is the game's.
+    // A device lying flat reports no direction at all, and is ignored.
+    float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+    if (length == 0) {
+        return;
+    }
+    world.set_gravity({direction.x / length * kSink, direction.y / length * kSink});
 }
