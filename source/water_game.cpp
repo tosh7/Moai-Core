@@ -7,6 +7,9 @@ constexpr float kDrag = 5;
 
 // Thin enough to pass through any ring's hole.
 constexpr float kPegThickness = 6;
+constexpr float kJetSpeed = 1200;
+constexpr float kJetReach = 500;
+constexpr float kJetWidth = 60;
 
 WaterGame::WaterGame(float width, float height): world(width, height) {
     world.set_gravity({0, -kSink});
@@ -26,4 +29,10 @@ int WaterGame::add_peg(Vec2 tip, float length) {
         0);
     pegs.push_back({obstacle, tip, length, 0});
     return static_cast<int>(pegs.size()) - 1;
+}
+
+int WaterGame::add_jet(Vec2 nozzle) {
+    int flow = world.add_flow(nozzle, {0, kJetSpeed}, kJetReach, kJetWidth);
+    jets.push_back({flow});
+    return static_cast<int>(jets.size() - 1);
 }
