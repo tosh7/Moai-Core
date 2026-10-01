@@ -36,3 +36,19 @@ int WaterGame::add_jet(Vec2 nozzle) {
     jets.push_back({flow});
     return static_cast<int>(jets.size() - 1);
 }
+
+Vec2 WaterGame::ring_position(int ring) const {
+    return world.position_of(rings[ring].body);
+}
+
+int WaterGame::ring_on_peg(int ring) const {
+    return rings[ring].peg;
+}
+
+int WaterGame::rings_on(int peg) const {
+    return pegs[peg].count;
+}
+
+float WaterGame::jet_strength(int jet) const {
+    return world.flow_strength(jets[jet].flow);
+}
