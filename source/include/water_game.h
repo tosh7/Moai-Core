@@ -48,8 +48,10 @@ class WaterGame {
     private:
         struct Ring {
             int body;       // in world
+            float radius;   // World has it too, but does not say
             float hole;
             int peg;        // -1 while free
+            float rest;     // on a peg, the height it slides down to
         };
 
         struct Peg {
