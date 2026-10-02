@@ -112,6 +112,38 @@ sets it turning, harder the further from the middle it lands, and it throws
 whatever it touches. It loses a little to friction as it goes, so a knock
 spins it and then lets it settle.
 
+### Drag and flows
+
+What the bodies move through.
+
+```cpp
+world.set_drag(5);                                          // water; 0, the default, is air
+
+int jet = world.add_flow({200, 0}, {0, 600}, 400, 40);      // from the floor, up at 600, 400 high, 40 wide
+world.set_flow(jet, 1);                                     // 0 is off, 1 full; held until set again
+```
+
+Drag takes a share of a body's speed every second, so a body falling through
+something thick stops gaining speed and sinks steadily at gravity over drag.
+
+A flow is a column where the medium itself is moving, strongest at its origin
+and fading to nothing at its reach and its edges. Drag pulls a body towards the
+medium's velocity rather than towards rest, so still water slows a body and
+moving water carries it. With no drag, a flow has nothing to carry with.
+
+### Holding
+
+```cpp
+world.hold_body(body);                     // out of the physics, in the host's hands
+world.move_body(body, finger);             // goes exactly here
+world.release_body(body, {300, 0});        // back in, setting off at this velocity
+```
+
+A held body ignores gravity, drag and flows, and is not pushed out of obstacles
+or walls: where the host put it is where it is. It is still there to the others,
+which bump off it as off a wall. A finger dragging something, or a ring caught
+on a peg.
+
 Not yet supported: per-body mass or material, joints, and anything driving an
 obstacle — a spin, once given, only runs down.
 
@@ -172,6 +204,41 @@ two free functions. It is there for anything else that needs one.
 Not yet supported: holding the formants still, so a shifted voice still sounds
 like the same person rather than a smaller or larger one; and processing
 without allocating, which an audio thread will want.
+
+## WaterGame
+
+The water ring toss: rings drifting in a sealed tank, two pumps in the floor,
+and pegs to land them on. Built on World, which does the water.
+
+```cpp
+#include "water_game.h"
+
+WaterGame game(400, 800);
+
+int left = game.add_jet({100, 0});            // a pump in the floor
+int peg  = game.add_peg({200, 300}, 200);     // tip at 300, standing 200 tall
+int ring = game.add_ring({120, 700}, 20, 12); // outside 20, hole 12
+
+game.pump(left);                              // one press: a burst that dies away
+game.set_down({0.3f, -1});                    // tilting; only the direction is used
+game.step(1.0f / 120);
+
+game.ring_on_peg(ring);                       // the peg it is on, or -1
+game.rings_on(peg);                           // the score
+```
+
+Rings sink slowly, as through water. A press sends a burst up from the pump
+that lifts whatever is over it and dies away within half a second; holding the
+button does no more than pressing it. A ring that comes down over a peg's tip,
+with the tip inside its hole, is caught: it slides down the peg and rests on
+whatever is already there. One that lands on its rim slips off.
+
+The game decides how heavy the water is and how strong a pump is. The host
+says only which way is down and when a button is pressed.
+
+Not yet supported: rings coming back off a peg, pegs that are not upright, and
+a caught ring that stops bumping into the others — on a peg it still collides
+as a full circle.
 
 ## How to build
 To make .a file, do below.
