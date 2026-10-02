@@ -4,9 +4,9 @@
 #include <cmath>
 
 // Rings sink slowly through water: gravity pulls, drag holds them back, and
-// they settle at kSink / kDrag, a leisurely 200 a second.
+// they settle at kSink / kDrag, a leisurely 100 a second.
 constexpr float kSink = 1000;
-constexpr float kDrag = 5;
+constexpr float kDrag = 10;
 
 // Thin enough to pass through any ring's hole.
 constexpr float kPegThickness = 6;

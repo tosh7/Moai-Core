@@ -18,7 +18,7 @@ void run(WaterGame& game, float seconds) {
 // 1. A ring left alone sinks slowly and steadily, and rests on the floor
 //
 // Slowly is the point: in air it would be falling at 1000 a second after a
-// second, in this water it sinks at a steady 200.
+// second, in this water it sinks at a steady 100.
 void test_a_ring_sinks_slowly_to_the_floor() {
     // Given
     WaterGame game(400, 800);
@@ -31,13 +31,13 @@ void test_a_ring_sinks_slowly_to_the_floor() {
     float after_two = game.ring_position(ring).y;
 
     // Then: the first second is spent getting up to speed, and covers far
-    // less than the 500 a fall through air would; after that it holds 200
+    // less than the 500 a fall through air would; after that it holds 100
     CHECK_TRUE("sinking", after_one < 700);
     CHECK_TRUE("far less than a fall through air", 700 - after_one < 250);
-    CHECK_NEAR("200 in the next second, and no faster", after_one - after_two, 200, 5);
+    CHECK_NEAR("100 in the next second, and no faster", after_one - after_two, 100, 5);
 
     // And in the end, on the floor
-    run(game, 3);
+    run(game, 6);
     CHECK_NEAR("resting on the floor", game.ring_position(ring).y, 20, 1);
 }
 
@@ -105,7 +105,7 @@ void test_a_ring_beside_a_peg_is_not_caught() {
     int ring = game.add_ring({260, 600}, 20, 12);
 
     // When
-    run(game, 4);
+    run(game, 8);
 
     // Then
     CHECK_EQ("not on a peg", game.ring_on_peg(ring), -1);
@@ -182,7 +182,7 @@ void test_tilting_changes_which_way_rings_sink() {
     run(game, 1);
 
     // Then: drifting right at the usual speed, not falling
-    CHECK_NEAR("sank about 200 to the right", game.ring_position(ring).x - 100, 200, 40);
+    CHECK_NEAR("sank about 100 to the right", game.ring_position(ring).x - 100, 100, 20);
     CHECK_NEAR("no lower than it was", game.ring_position(ring).y, 400, 0.5);
 }
 
@@ -199,7 +199,7 @@ void test_no_direction_is_ignored() {
     // Then: still sinking straight down, not frozen or lost
     Vec2 at = game.ring_position(ring);
     CHECK_TRUE("a number, not NaN", std::isfinite(at.x) && std::isfinite(at.y));
-    CHECK_TRUE("still sinking", at.y < 300);
+    CHECK_TRUE("still sinking", at.y < 350);
 }
 
 // 11. However hard it is pumped, every ring stays inside the case
