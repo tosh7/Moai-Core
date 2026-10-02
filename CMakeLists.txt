@@ -36,6 +36,7 @@ if(NOT CMAKE_CROSSCOMPILING)
         tests/test_elevator.cpp
         tests/test_fft.cpp
         tests/test_voice_changer.cpp
+        tests/test_water_game.cpp
         tests/test_world.cpp
     )
     target_link_libraries(test_runner PRIVATE moai)
